@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+  http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://www.springframework.org/schema/context
+  http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+	<bean id="contextSource" class="org.springframework.ldap.core.support.LdapContextSource">
+		<property name="url" value="ldap://dev08-cg14:389" />
+		<property name="base" value="" />
+		<property name="userDn" value="cn=admin,dc=calvados,dc=fr" />
+		<property name="password" value="admin" />
+	</bean>
+
+	<bean id="ldapTemplate" class="org.springframework.ldap.core.LdapTemplate">
+		<constructor-arg ref="contextSource" />
+	</bean>
+	
+	<bean id="contextMapper" class="org.ldap.core.DefaultContextMapper">
+	</bean>
+	
+	<bean id="ldapDAO" class="org.ldap.core.dao.LdapDAOImpl">
+		<property name="ldapTemplate" ref="ldapTemplate"></property>
+		<property name="mapper" ref="contextMapper"></property>
+	</bean>
+	
+	<bean id="rest2ldapConfig" class="org.ldap.Rest2LdapConfig" factory-method="getInstance">
+		<constructor-arg>
+			<value>ldap2rest.xml</value>
+		</constructor-arg>
+	</bean>
+	
+</beans>
