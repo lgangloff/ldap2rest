@@ -1,0 +1,26 @@
+Configuration de la webapp
+	
+	La webapp dispose d'un fichier unique de configuration: <<applicationContext-ldap.xml>>
+	Il décrit tous les beans utilisés par l'application.
+	
+* contextSource
+
+	Permet d'indiquer les informations de connexion au LDAP
+	
+*--------------------+------------------------+
+|| Nom du paramètre  || Valeur attendue		  |
+*--------------------+------------------------+
+| url 		 		 | URL de connection au ldap: ldap://SERVER_NAME:PORT |
+*--------------------+------------------------+
+| base 				 | Base LDAP |
+*--------------------+------------------------+
+| userDn 			 | Nom d'utilisateur à utiliser pour se connecter au LDAP |
+*--------------------+------------------------+
+| password 			 | Mot de passe associé |
+*--------------------+------------------------+
+
+* ldapTemplate
+
+	Déclare un ldapTemplate ainsi que sa source de donnée à utiliser (contextSource).
+	Le bean ldapTemplate est utilisé par les DAO pour interroger le LDAP.\
+	Cette classe provient du projet SpringLDAP (http://www.springsource.org/ldap) qui facilite l'accès et la modification d'un LDAP.
