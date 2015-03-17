@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -32,6 +33,7 @@ public class LdapEntryRepresentation {
 
 	private String id;
 	private Map<String, Object> attributes;
+	private List<LinkRepresentation> links;
 	
 	private Rest2LdapConfig config;
 	private ResourceConfiguration resource;
@@ -51,6 +53,12 @@ public class LdapEntryRepresentation {
 	public void buildRepresentation(LdapEntry entry) {
 
 		this.id = resource.getPathConverter().getUriFromDn(entry.getDn());
+		this.links = new ArrayList<LinkRepresentation>();
+		
+		this.links.add(new LinkRepresentation("this", this.id, MediaType.APPLICATION_JSON));
+		for (RepresentationConfiguration r : resource.getRepresentations()) {
+			this.links.add(new LinkRepresentation("this/"+r.getName(), this.id + "?view=" + r.getName(), MediaType.APPLICATION_JSON));
+		}
 		
 		if (representation.isIncludeAllAttributes()){
 
@@ -87,6 +95,9 @@ public class LdapEntryRepresentation {
 					}
 					
 				}
+				else if (StringUtils.equals(attr.getType(), "file")){
+					this.links.add(new LinkRepresentation("this/" + attr.getName(), this.id + "/" + attr.getName(), attr.getContentType()));
+				}
 				else{
 					if (attr.isMultiple()){
 						attributes.put(attr.getName(), entry.getAttributeValues(attr.getLdapName()));
@@ -115,6 +126,15 @@ public class LdapEntryRepresentation {
 
 	public void setAttributes(Map<String, Object> attributes) {
 		this.attributes = attributes;
+	}
+
+	@XmlElement
+	public List<LinkRepresentation> getLinks() {
+		return links;
+	}
+
+	public void setLinks(List<LinkRepresentation> links) {
+		this.links = links;
 	}
 
 	public void setResource(ResourceConfiguration resource) {

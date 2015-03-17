@@ -25,6 +25,8 @@ import org.ldap.ws.repr.SearchResultRepresentation;
 import org.ldap.ws.resources.ILdapResource;
 import org.springframework.ldap.core.DistinguishedName;
 
+import com.jayway.restassured.internal.http.Status;
+
 /**
  * 
  * @author loic.gangloff@gmail.com
@@ -63,6 +65,11 @@ public class LdapResource implements ILdapResource {
 		String realpath = StringUtils.removeStart(path, resourceName);
 		realpath = StringUtils.removeStart(realpath, "/");
 		ResourceConfiguration resource = config.getResourceConfig(resourceName);
+		
+		if (resource == null){
+			return Response.noContent().build();
+		}
+		
 		RepresentationConfiguration repr = resource.getRepresentation(view);
 		
 		

@@ -1,0 +1,228 @@
+version: 1
+DN: dc=example,dc=com
+objectClass: top
+objectClass: domain
+dc: example
+
+DN: ou=people,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+
+DN: ou=internal,ou=people,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: internal
+
+DN: cn=j.doe,ou=internal,ou=people,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: j.doe
+displayName:: Sm9obiBEb2U=
+employeeNumber: 111
+givenName:: Sm9obg==
+mail: john.doe@example.com
+ou: j.doe
+seeAlso: cn=administrator,ou=groupes,dc=example,dc=com
+seeAlso: cn=moderator,ou=groupes,dc=example,dc=com
+seeAlso: cn=contributor,ou=groupes,dc=example,dc=com
+sn: DOE
+telephoneNumber: 0383335566
+telexNumber: 0383335523
+homePhone: 1234
+mobile: 06.18.18.18.18
+roomNumber: 1234
+title: M.
+userPassword:: e1NIQX04Y00zNVlwNmgxS2RuUHFEYmhVdWJUTHB5eTA9
+
+
+DN: cn=v.rossi,ou=internal,ou=people,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: v.rossi
+displayName:: VmFsZW50aW5vIFJPU1NJ
+employeeNumber: 112
+givenName:: VmFsZW50aW5v
+mail: valentino.rossi@example.com
+ou: v.rossi
+seeAlso: cn=administrator,ou=groupes,dc=example,dc=com
+sn: ROSSI
+telephoneNumber: 0383335566
+telexNumber: 0383335523
+homePhone: 1234
+mobile: 06.18.18.18.18
+roomNumber: 1234
+title: M.
+userPassword:: e1NIQX04Y00zNVlwNmgxS2RuUHFEYmhVdWJUTHB5eTA9
+
+DN: ou=external,ou=people,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: externes
+
+DN: cn=extern1,ou=external,ou=people,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: extern1
+displayName: extern1
+givenName: extern1
+sn: extern1
+userPassword:: e1NIQX04Y00zNVlwNmgxS2RuUHFEYmhVdWJUTHB5eTA9
+
+DN: ou=function,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: fonctions
+
+DN: cn=secretaire,ou=function,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+businessCategory:: U2VjcsOpdGFpcmU=
+cn: 113
+cn: secretaire
+member: 
+member: cn=v.rossi,ou=internal,ou=people,dc=example,dc=com
+
+DN: cn=responsabledepole,ou=function,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+businessCategory:: UmVzcG9uc2FibGUgZGUgcMO0bGU=
+cn: 220
+cn: responsabledepole
+member: 
+member: cn=j.doe,ou=internal,ou=people,dc=example,dc=com
+seeAlso: cn=ressources,ou=specialty,dc=example,dc=com
+
+DN: ou=localisations,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: localisations
+
+DN: o=bibliotheque,ou=localisations,dc=example,dc=com
+objectClass: top
+objectClass: organization
+businessCategory: Bibliothèque du Grand Ouest
+l: Nancy
+o: bibliotheque
+postalAddress:: MTUgUnVlIGR1IGJhbWJvdSBxdWkgZHVpdA==
+postalCode: 54000
+seeAlso: cn=j.doe,ou=internal,ou=people,dc=example,dc=com
+
+DN: o=promenadeFort,ou=localisations,dc=example,dc=com
+objectClass: top
+objectClass: organization
+businessCategory:: UHJvbWVuYWRlIEZvcnQ=
+l: Metz
+o: promenadeFort
+postalAddress:: MyBSdWUgZGVzIG9pc2VhdXggcXVpIGNoYW50ZW50
+postalCode: 57000
+seeAlso: cn=j.doe,ou=internal,ou=people,dc=example,dc=com
+telephoneNumber: 01 32 44 56 78
+telexNumber: 01 32 44 56 35
+
+DN: o=italy1,ou=localisations,dc=example,dc=com
+objectClass: top
+objectClass: organization
+businessCategory: Circuit Mugello
+l: Florence
+o: italy1
+postalAddress: 15 Rue de la poignée
+postalCode: 98473
+seeAlso: cn=v.rossi,ou=internal,ou=people,dc=example,dc=com
+telephoneNumber: 01 32 44 56 23
+
+DN: ou=organigramme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: organigramme
+
+DN: ou=directions,ou=organigramme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+businessCategory: Directions
+l: Nancy Cedex
+ou: directions
+postalAddress: Rue Stanislas
+postalCode: 54032
+telephoneNumber: 02 31 57 14 14
+telexNumber: 03.83.57.14.94
+
+DN: ou=dgajeunessecultureterritoires,ou=directions,ou=organigramme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+businessCategory: DGA Jeunesse, Culture et Territoires
+l: Nancy Cedex 1
+ou: dgajeunessecultureterritoires
+postalAddress:: SMO0dGVsIGR1IETDqXBhcnRlbWVudCAtIFJ1ZSBTYWludCBMYXVyZW50
+postalAddress: BP 250
+postalCode: 54035
+seeAlso: cn=v.rossi,ou=internal,ou=people,dc=example,dc=com
+telephoneNumber: 03 83 57 14 05
+telexNumber: 03.83.57.14.95
+
+DN: ou=servicearcheologie,ou=dgajeunessecultureterritoires,ou=directions,ou=organigramme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+businessCategory:: U2VydmljZSBBcmNow6lvbG9naWU=
+l: Nancy
+ou: servicearcheologie
+postalAddress: 36, rue des rouleaux
+postalCode: 54549
+description: Description service achéologique
+telephoneNumber: 18.30
+telephoneNumber: 03.83.57.18.30
+telexNumber: 03.83.57.18.35
+
+DN: ou=servicepatrimoine,ou=dgajeunessecultureterritoires,ou=directions,ou=organigramme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+businessCategory: Service patrimoine
+l: Nancy
+ou: servicepatrimoine
+postalAddress: 36, rue des rouleux
+postalCode: 54000
+telephoneNumber: 18.00
+telephoneNumber: 03.83.57.18.00
+telexNumber: 03.83.57.18.09
+
+DN: ou=bibliothequedepartementalepret,ou=dgajeunessecultureterritoires,ou=directions,ou=organigramme,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+businessCategory:: QmlibGlvdGjDqHF1ZSBEw6lwYXJ0ZW1lbnRhbGUgZGUgUHLDqnQ=
+l: Nancy
+ou: bibliothequedepartementalepret
+postalAddress: Chemin de Moselle
+postalAddress: BP 18
+postalCode: 54000
+telephoneNumber: 21.34
+telephoneNumber: 03.83.56.78.87
+telexNumber: 03.83.56.78.88
+
+DN: ou=specialty,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: specialites
+
+DN: cn=ressources,ou=specialty,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+businessCategory:: TWFyY2jDqXMgUHVibGljcw==
+cn: 19
+cn: ressources
+member: 
+owner: cn=responsabledepole,ou=function,dc=example,dc=com
+
+DN: cn=moto,ou=specialty,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+businessCategory:: Q29tcHRhYmlsaXTDqSBkZXMgQsOidGltZW50cw==
+cn: 20
+cn: moto
+member: 
+owner: cn=responsabledepole,ou=function,dc=example,dc=com

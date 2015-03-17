@@ -88,6 +88,10 @@ public class Rest2LdapConfig {
 			}
 			return null;
 		}
+		
+		public List<RepresentationConfiguration> getRepresentations() {
+			return new ArrayList<RepresentationConfiguration>(representations);
+		}
 
 		public DistinguishedName getDnFromUri(String uri) throws InvalidNameException {
 			PathConverter pathConverter = this.getPathConverter();
@@ -206,6 +210,12 @@ public class Rest2LdapConfig {
 				List<AttributeMappingConfiguration> extendsAttributes) {
 			attributes.addAll(extendsAttributes);
 		}
+
+		public String getName() {
+			return name;
+		}
+		
+		
 	}
 	
 	
@@ -225,26 +235,30 @@ public class Rest2LdapConfig {
 
 		@XmlAttribute(name="resource")
 		private String resourceName;
-		
+
 		@XmlAttribute(name="multiple")
 		private boolean multiple;
+
+		@XmlAttribute(name="contentType")
+		private String contentType;
 		
 		protected AttributeMappingConfiguration() {
 			
 		}
 		protected AttributeMappingConfiguration(String ldapName, String name,
-				String type, boolean multiple) {
+				String type, boolean multiple, String contentType) {
 			super();
 			this.ldapName = ldapName;
 			this.name = name;
 			this.type = type;
 			this.multiple = multiple;
+			this.contentType = contentType;
 		}
 		@Override
 		public String toString() {
 			return "AttributeMappingConfiguration [ldapName=" + ldapName
 					+ ", name=" + name + ", type=" + type + ", resource=" + resourceName + ", multiple="
-					+ multiple + "]";
+							+ multiple + ", contentType=" + contentType + "]";
 		}
 		public String getLdapName() {
 			return ldapName;
@@ -260,6 +274,9 @@ public class Rest2LdapConfig {
 		}
 		public boolean isMultiple() {
 			return multiple;
+		}
+		public String getContentType() {
+			return contentType;
 		}
 	}
 	
@@ -325,6 +342,8 @@ public class Rest2LdapConfig {
 	}
 	
 	public ResourceConfiguration getResourceConfig(String resourceName) {
+		if (this.resources == null)
+			return null;
 		for (ResourceConfiguration r : this.resources) {
 			if (StringUtils.equalsIgnoreCase(resourceName, r.name))
 				return r;
@@ -334,6 +353,8 @@ public class Rest2LdapConfig {
 
 
 	private void resolveExtendsAndDependencies() {
+		if (this.resources == null)
+			return;
 		for (ResourceConfiguration resource : this.resources) {
 			resource.setParentLdapBase(this.ldapBase);
 			resource.config = this;
@@ -349,7 +370,7 @@ public class Rest2LdapConfig {
 	public static Rest2LdapConfig getInstance(String configFileName) throws JAXBException {
 
 		log.info("Loading config from "+configFileName);
-		InputStream is = Rest2LdapConfig.class.getClassLoader().getResourceAsStream(configFileName);
+		InputStream is = Rest2LdapConfig.class.getClassLoader().getResourceAsStream(configFileName); 
 		
 		Rest2LdapConfig c;
 		try {

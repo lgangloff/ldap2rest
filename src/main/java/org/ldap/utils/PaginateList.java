@@ -3,6 +3,8 @@ package org.ldap.utils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
  * 
@@ -86,5 +88,17 @@ public class PaginateList<E> implements Iterable<E>{
 	@Override
 	public Iterator<E> iterator() {
 		return getResults().iterator();
+	}
+
+
+	@Override
+	public void forEach(Consumer<? super E> c) {
+		getResults().forEach(c);
+	}
+
+
+	@Override
+	public Spliterator<E> spliterator() {
+		return getResults().spliterator();
 	}	
 }

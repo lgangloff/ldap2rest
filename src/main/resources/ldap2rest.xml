@@ -19,6 +19,7 @@
 			<attribute ldapname="description"				name="description"/>
 			<attribute ldapname="displayName"				name="nom-complet"/>
 			<attribute ldapname="roomNumber"				name="num-bureau"/>
+			<attribute ldapname="jpegPhoto	"				name="photo" 			type="file" 	contentType="image/jpeg"/>
 			<attribute ldapname="cg14IndicCptActif"			name="actif"/>
 			<attribute ldapname="cg14InterneFonction"		name="metier"			type="resource" resource="metier"/> 
 			<attribute ldapname="cg14InterneSpecialite"		name="emploi"			type="resource" resource="emploi"/>
@@ -96,7 +97,6 @@
 			</param>
 		</query>
 	</resource>
-	
 	
 
 	<resource name="ldap" ldapkey="ou" subresource="true">
