@@ -33,10 +33,10 @@ public class Rest2LdapConfig {
 
 	private static final Logger log = Logger.getLogger(Rest2LdapConfig.class);
 	
-	@XmlAttribute(name="ldapbase")
+	@XmlAttribute(name="ldapbase", required=true)
 	private String ldapBase;
 
-	@XmlElement(name="resource")
+	@XmlElement(name="resource", required=true)
 	private List<ResourceConfiguration> resources;
 
 	
