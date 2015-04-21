@@ -6,6 +6,7 @@
 			<attribute ldapname="sn"						name="nom"			required="true" maxlength="16"/> 
 			<attribute ldapname="givenName"					name="prenom"/> 
 			<attribute ldapname="telephoneNumber"			name="tel-externe"  type="integer"/>
+			<attribute ldapname="seeAlso"					name="fonction"  	type="resource" resource="fonction" multiple="true"/>
 		</representation>
 		<representation name="full" extends="default" updatable="false">		
 			<attribute ldapname="mail"						name="mail"/>
@@ -14,13 +15,32 @@
 			<attribute ldapname="telexNumber"				name="tel-fax"/>
 		</representation>		
 		
-		<query>
+		<query representation="default">
 			<param name="nomPrenom" operand="OR">
 				<attribute ldapname="sn" filter="WhitespaceWildcardsFilter"/>
 				<attribute ldapname="givenName" filter="WhitespaceWildcardsFilter"/>
 				<attribute ldapname="displayName" filter="WhitespaceWildcardsFilter"/>
 			</param>
+-			<param name="fonction" operand="AND">
+-				<attribute ldapname="seeAlso" filter="EqualsFilter" type="resource" resource="fonction"/>
+-			</param>
 		</query>
 	</resource>
 
+
+
+-	<resource name="fonction" ldapbase="ou=function" ldapkey="cn">
+-		<representation name="default">
+-			<attribute ldapname="businessCategory"			name="libelle" 	type="string"/>
+-			<attribute ldapname="member"					name="membres" 	type="resource" resource="people" multiple="true"/>
+-		</representation>
+-		
+-		
+-		<query representation="default">
+-			<param name="libelle">
+-				<attribute ldapname="businessCategory" filter="LikeFilter"/>
+-			</param>
+-		</query>
+-		
+-	</resource>
 </rest>

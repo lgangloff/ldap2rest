@@ -25,9 +25,8 @@ employeeNumber: 111
 givenName:: Sm9obg==
 mail: john.doe@example.com
 ou: j.doe
-seeAlso: cn=administrator,ou=groupes,dc=example,dc=com
-seeAlso: cn=moderator,ou=groupes,dc=example,dc=com
-seeAlso: cn=contributor,ou=groupes,dc=example,dc=com
+seeAlso: cn=secretaire,ou=function,dc=example,dc=com
+seeAlso: cn=responsabledepole,ou=function,dc=example,dc=com
 sn: DOE
 telephoneNumber: 0383335566
 telexNumber: 0383335523
@@ -49,7 +48,7 @@ employeeNumber: 112
 givenName:: VmFsZW50aW5v
 mail: valentino.rossi@example.com
 ou: v.rossi
-seeAlso: cn=administrator,ou=groupes,dc=example,dc=com
+seeAlso: cn=secretaire,ou=function,dc=example,dc=com
 sn: ROSSI
 telephoneNumber: 0383335566
 telexNumber: 0383335523
@@ -86,8 +85,8 @@ objectClass: groupOfNames
 businessCategory:: U2VjcsOpdGFpcmU=
 cn: 113
 cn: secretaire
-member: 
 member: cn=v.rossi,ou=internal,ou=people,dc=example,dc=com
+member: cn=j.doe,ou=internal,ou=people,dc=example,dc=com
 
 DN: cn=responsabledepole,ou=function,dc=example,dc=com
 objectClass: top
@@ -95,7 +94,6 @@ objectClass: groupOfNames
 businessCategory:: UmVzcG9uc2FibGUgZGUgcMO0bGU=
 cn: 220
 cn: responsabledepole
-member: 
 member: cn=j.doe,ou=internal,ou=people,dc=example,dc=com
 seeAlso: cn=ressources,ou=specialty,dc=example,dc=com
 
