@@ -3,18 +3,26 @@ package org.ldap;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import javax.naming.InvalidNameException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.ldap.core.rules.AttributeRules;
+import org.ldap.core.rules.FormatRules;
+import org.ldap.core.rules.MaxLengthRules;
+import org.ldap.core.rules.MultipleRules;
+import org.ldap.core.rules.ReadOnlyRules;
+import org.ldap.core.rules.RequiredRules;
+import org.ldap.core.rules.TypeRules;
 import org.ldap.criteria.LdapCriteria;
 import org.ldap.utils.PathConverter;
 import org.springframework.ldap.core.DistinguishedName;
@@ -30,6 +38,19 @@ import org.springframework.ldap.filter.WhitespaceWildcardsFilter;
 public class Rest2LdapConfig {
 	
 
+
+	public enum AttributeMappingType {
+		@XmlEnumValue("string")
+		STRING, 
+		@XmlEnumValue("enum")
+		ENUM, 
+		@XmlEnumValue("integer")
+		INTEGER, 
+		@XmlEnumValue("file")
+		FILE, 
+		@XmlEnumValue("resource")
+		RESOURCE;
+	}
 
 	private static final Logger log = Logger.getLogger(Rest2LdapConfig.class);
 	
@@ -93,7 +114,7 @@ public class Rest2LdapConfig {
 			return new ArrayList<RepresentationConfiguration>(representations);
 		}
 
-		public DistinguishedName getDnFromUri(String uri) throws InvalidNameException {
+		public DistinguishedName getDnFromUri(String uri){
 			PathConverter pathConverter = this.getPathConverter();
 			return pathConverter.getDnFromUri(uri);
 		}
@@ -145,12 +166,14 @@ public class Rest2LdapConfig {
 									if (StringUtils.equals(queryParamAttribute.type, "resource")){
 										ResourceConfiguration res = ResourceConfiguration.this.config.getResourceConfig(queryParamAttribute.resource);
 										PathConverter pathConverter = res.getPathConverter();
+										value = pathConverter.getDnFromUri(value).toString();
+										/*
 										try {
 											value = pathConverter.getDnFromUri(value).toString();
 										} catch (InvalidNameException e) {
 											value = null;
 											log.warn("La valeur '"+value+"' du paramètre '"+queryParam.name+"' ne peut être transformé en resource '"+queryParamAttribute.resource+"': "+e.getMessage(), e);
-										}
+										}*/
 									}
 									if (value != null){
 										if (StringUtils.equals(queryParamAttribute.filter, "WhitespaceWildcardsFilter")){
@@ -184,9 +207,12 @@ public class Rest2LdapConfig {
 
 		@XmlAttribute(name="extends")
 		private String extendsName;
-		
+
 		@XmlAttribute(name="allattributes")
 		private boolean includeAllAttributes = false;
+
+		@XmlAttribute(name="updatable")
+		private boolean updatable = false;
 
 		@XmlElement(name="attribute")
 		private List<AttributeMappingConfiguration> attributes = new ArrayList<Rest2LdapConfig.AttributeMappingConfiguration>();
@@ -204,6 +230,10 @@ public class Rest2LdapConfig {
 
 		public boolean isIncludeAllAttributes() {
 			return includeAllAttributes;
+		}
+		
+		public boolean isUpdatable() {
+			return updatable;
 		}
 
 		public void setExtendsAttributes(
@@ -231,22 +261,42 @@ public class Rest2LdapConfig {
 		private String name;
 		
 		@XmlAttribute(name="type")
-		private String type;
-
+		private AttributeMappingType type = AttributeMappingType.STRING;
+		
 		@XmlAttribute(name="resource")
 		private String resourceName;
 
+		
+		//Rules
+		
 		@XmlAttribute(name="multiple")
-		private boolean multiple;
+		private boolean multiple = false;
 
 		@XmlAttribute(name="contentType")
 		private String contentType;
+
+		@XmlAttribute(name="readonly")
+		private boolean readonly = false;
+
+		@XmlAttribute(name="required")
+		private boolean required = false;
+
+		@XmlAttribute(name="values")
+		private String values;
+
+		@XmlAttribute(name="maxlength")
+		private Integer maxlength;
+
+		@XmlAttribute(name="format")
+		private String format;
+		
+		private List<AttributeRules> rules;
 		
 		protected AttributeMappingConfiguration() {
 			
 		}
 		protected AttributeMappingConfiguration(String ldapName, String name,
-				String type, boolean multiple, String contentType) {
+				AttributeMappingType type, boolean multiple, String contentType) {
 			super();
 			this.ldapName = ldapName;
 			this.name = name;
@@ -266,7 +316,7 @@ public class Rest2LdapConfig {
 		public String getName() {
 			return name;
 		}
-		public String getType() {
+		public AttributeMappingType getType() {
 			return type;
 		}
 		public String getResourceName() {
@@ -278,6 +328,37 @@ public class Rest2LdapConfig {
 		public String getContentType() {
 			return contentType;
 		}
+		public boolean isReadonly() {
+			return readonly;
+		}
+		public boolean isRequired() {
+			return required;
+		}
+		public String getValues() {
+			return values;
+		}
+		public Integer getMaxlength() {
+			return maxlength;
+		}
+		
+		public String getFormat() {
+			return format;
+		}
+		
+		public void buildAttributeRules() {
+			rules = new ArrayList<AttributeRules>();
+			if (Objects.nonNull(format))rules.add(new FormatRules(format));
+			if (Objects.nonNull(maxlength))rules.add(new MaxLengthRules(maxlength));
+			if (multiple) rules.add(new MultipleRules());
+			if (readonly) rules.add(new ReadOnlyRules());
+			if (required) rules.add(new RequiredRules());
+			rules.add(new TypeRules(type, values, contentType));
+		}
+		
+		public List<AttributeRules> getRules() {
+			return rules;
+		}
+		
 	}
 	
 
@@ -366,6 +447,16 @@ public class Rest2LdapConfig {
 			}
 		}
 	}	
+	
+	private void buildAttributeRules(){
+		for (ResourceConfiguration resource : this.resources) {
+			for (RepresentationConfiguration representation : resource.representations) {
+				for (AttributeMappingConfiguration attributeMapping : representation.attributes) {
+					attributeMapping.buildAttributeRules();
+				}
+			}
+		}
+	}
 
 	public static Rest2LdapConfig getInstance(String configFileName) throws JAXBException {
 
@@ -383,6 +474,7 @@ public class Rest2LdapConfig {
 		}
 		
 		c.resolveExtendsAndDependencies();
+		c.buildAttributeRules();
 
 		log.info("Config loaded: "+c.toString());
 		

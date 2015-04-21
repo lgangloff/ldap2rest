@@ -2,8 +2,6 @@ package org.ldap.utils;
 
 import java.util.List;
 
-import javax.naming.InvalidNameException;
-
 import org.apache.commons.lang.StringUtils;
 import org.springframework.ldap.core.DistinguishedName;
 import org.springframework.ldap.core.LdapRdn;
@@ -50,7 +48,7 @@ public class PathConverter {
 		return sb.toString();
 	}
 
-	public DistinguishedName getDnFromUri(String uri) throws InvalidNameException {
+	public DistinguishedName getDnFromUri(String uri) {
 		DistinguishedName distinguishedName = new DistinguishedName(base);
 
 		if (StringUtils.isNotBlank(uri)){

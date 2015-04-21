@@ -58,7 +58,7 @@ public class SearchResultRepresentation {
 			entryRepresentation.setRepresentation(representation);
 			entryRepresentation.setResource(resource);
 			entryRepresentation.setConfig(config);
-			entryRepresentation.buildRepresentation(entry);
+			entryRepresentation.format(entry);
 			results.add(entryRepresentation);
 		}
 		return results;

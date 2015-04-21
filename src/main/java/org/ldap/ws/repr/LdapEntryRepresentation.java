@@ -12,9 +12,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.commons.lang.StringUtils;
 import org.ldap.Rest2LdapConfig;
 import org.ldap.Rest2LdapConfig.AttributeMappingConfiguration;
+import org.ldap.Rest2LdapConfig.AttributeMappingType;
 import org.ldap.Rest2LdapConfig.RepresentationConfiguration;
 import org.ldap.Rest2LdapConfig.ResourceConfiguration;
 import org.ldap.beans.LdapEntry;
@@ -32,8 +32,9 @@ import org.ldap.utils.PathConverter;
 public class LdapEntryRepresentation {
 
 	private String id;
-	private Map<String, Object> attributes;
-	private List<LinkRepresentation> links;
+	private Map<String, Object> attributes = new HashMap<String, Object>();
+	private List<LinkRepresentation> links = new ArrayList<LinkRepresentation>();
+	private List<String> warnings = new ArrayList<String>();
 	
 	private Rest2LdapConfig config;
 	private ResourceConfiguration resource;
@@ -50,7 +51,50 @@ public class LdapEntryRepresentation {
 		this.representation = representation;
 	}
 
-	public void buildRepresentation(LdapEntry entry) {
+	public LdapEntry parse(){
+		LdapEntry ldapEntry = new LdapEntry(resource.getPathConverter().getDnFromUri(this.id));
+		
+		
+		for (AttributeMappingConfiguration attr : representation.getAttributes()) {
+			
+			if (attributes.containsKey(attr.getName())){
+
+				if (attr.getType() == AttributeMappingType.RESOURCE){
+					
+					ResourceConfiguration res = config.getResourceConfig(attr.getResourceName());
+					PathConverter pathConverter = res.getPathConverter();
+					
+					if (attr.isMultiple()){
+						List<Object> attributeValues = (List<Object>) attributes.get(attr.getLdapName());
+						List<String> attributeDnValue = new ArrayList<String>(attributeValues.size());
+						
+						for (Object uri : attributeValues) {
+							attributeDnValue.add(pathConverter.getDnFromUri(uri.toString()).toString());
+						}
+						
+						attributes.put(attr.getLdapName(), attributeDnValue);
+					}
+					else{
+						String uri = (String) attributes.get(attr.getLdapName());
+						attributes.put(attr.getLdapName(), pathConverter.getDnFromUri(uri).toString());
+					}
+					
+				}
+				else if (attr.getType() == AttributeMappingType.FILE){
+					//TODO ?
+				}
+				else{
+					ldapEntry.putAttribute(attr.getLdapName(), attributes.get(attr.getName()));
+				}
+				
+			}
+			
+		}	
+		
+		
+		return ldapEntry;
+	}
+	public void format(LdapEntry entry) {
 
 		this.id = resource.getPathConverter().getUriFromDn(entry.getDn());
 		this.links = new ArrayList<LinkRepresentation>();
@@ -74,7 +118,7 @@ public class LdapEntryRepresentation {
 			this.attributes = new HashMap<String, Object>(representation.getAttributes().size());
 			for (AttributeMappingConfiguration attr : representation.getAttributes()) {
 					
-				if (StringUtils.equals(attr.getType(), "resource")){
+				if (attr.getType() == AttributeMappingType.RESOURCE){
 					
 					ResourceConfiguration res = config.getResourceConfig(attr.getResourceName());
 					PathConverter pathConverter = res.getPathConverter();
@@ -95,7 +139,7 @@ public class LdapEntryRepresentation {
 					}
 					
 				}
-				else if (StringUtils.equals(attr.getType(), "file")){
+				else if (attr.getType() == AttributeMappingType.FILE){
 					this.links.add(new LinkRepresentation("this/" + attr.getName(), this.id + "/" + attr.getName(), attr.getContentType()));
 				}
 				else{
@@ -148,5 +192,19 @@ public class LdapEntryRepresentation {
 	public void setConfig(Rest2LdapConfig config) {
 		this.config = config;
 	}
-	
+
+	@XmlElement
+	public List<String> getWarnings() {
+		return warnings;
+	}
+
+	public void addWarningMessage(String message) {
+		this.warnings.add(message);
+	}
+
+	@Override
+	public String toString() {
+		return "LdapEntryRepresentation [id=" + id + ", attributes="
+				+ attributes + "]";
+	}	
 }

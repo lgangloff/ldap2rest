@@ -1,13 +1,13 @@
 <rest ldapbase="dc=calvados,dc=fr">
 
 	<resource name="agent" ldapbase="ou=internes,ou=personnes" ldapkey="cn">
-		<representation name="default">
-			<attribute ldapname="employeeNumber"			name="num-employe"/>
-			<attribute ldapname="title"						name="civilite"/>
-			<attribute ldapname="sn"						name="nom"/> 
-			<attribute ldapname="givenName"					name="prenom"/> 
-			<attribute ldapname="mail"						name="mail"/>
-			<attribute ldapname="mobile"					name="tel-mobile"/>
+		<representation name="default" updatable="true">
+			<attribute ldapname="employeeNumber"			name="num-employe" 	readonly="true"/>
+			<attribute ldapname="title"						name="civilite" 	type="enum"		required="true" values="M.,Mme,Mlle"/>
+			<attribute ldapname="sn"						name="nom"			type="string" 	required="true" maxlength="32"/> 
+			<attribute ldapname="givenName"					name="prenom"		type="string"	required="true" maxlength="32"/> 
+			<attribute ldapname="mail"						name="mail"			readonly="true"/>
+			<attribute ldapname="mobile"					name="tel-mobile" 	type="string"  	format="##.##.##.##.##"/>
 			<attribute ldapname="telephoneNumber"			name="tel-externe"/>
 			<attribute ldapname="homePhone"					name="tel-interne"/>
 			<attribute ldapname="telexNumber"				name="tel-fax"/>

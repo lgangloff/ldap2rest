@@ -1,10 +1,7 @@
 package org.ldap.test;
 
-import junit.framework.Assert;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.ldap.core.DirContextAdapter;
 import org.springframework.ldap.core.LdapTemplate;
@@ -18,8 +15,8 @@ public class BaseLDAPUnitTest{
 	
 	private static InMemoryDirectoryServer ds;
 
-	@BeforeClass
-	public static void setupClass() throws Exception {		
+	@Before
+	public void setupClass() throws Exception {		
 
 		InMemoryDirectoryServerConfig config = new InMemoryDirectoryServerConfig("dc=example,dc=com");
 		config.addAdditionalBindCredentials("cn=Directory Manager", "password");
@@ -34,8 +31,8 @@ public class BaseLDAPUnitTest{
 		ds.startListening();
 	}
 	
-	@AfterClass
-	public static void afterClass(){
+	@After
+	public void afterClass(){
 		ds.shutDown(true);
 	}
 

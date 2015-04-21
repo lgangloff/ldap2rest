@@ -1,15 +1,15 @@
 <rest ldapbase="dc=example,dc=com">
 	<resource name="people" ldapbase="ou=internal,ou=people" ldapkey="cn">
-		<representation name="default">
-			<attribute ldapname="employeeNumber"			name="num-employe"/>
-			<attribute ldapname="title"						name="civilite"/>
-			<attribute ldapname="sn"						name="nom"/> 
+		<representation name="default" updatable="true">
+			<attribute ldapname="employeeNumber"			name="num-employe" 	readonly="true"/>
+			<attribute ldapname="title"						name="civilite" 	type="enum"		required="true" values="M.,Mme,Mlle"/>
+			<attribute ldapname="sn"						name="nom"			required="true" maxlength="16"/> 
 			<attribute ldapname="givenName"					name="prenom"/> 
+			<attribute ldapname="telephoneNumber"			name="tel-externe"  type="integer"/>
 		</representation>
-		<representation name="full" extends="default">		
+		<representation name="full" extends="default" updatable="false">		
 			<attribute ldapname="mail"						name="mail"/>
 			<attribute ldapname="mobile"					name="tel-mobile"/>
-			<attribute ldapname="telephoneNumber"			name="tel-externe"/>
 			<attribute ldapname="homePhone"					name="tel-interne"/>
 			<attribute ldapname="telexNumber"				name="tel-fax"/>
 		</representation>		

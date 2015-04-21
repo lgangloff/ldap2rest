@@ -1,6 +1,7 @@
 package org.ldap.beans;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,9 +17,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import org.eclipse.jetty.util.log.Log;
 import org.springframework.ldap.core.DistinguishedName;
 
 
@@ -34,6 +35,8 @@ import org.springframework.ldap.core.DistinguishedName;
 @XmlAccessorType(XmlAccessType.NONE)
 public class LdapEntry {
 
+	private static final Logger log = Logger.getLogger(LdapEntry.class);
+	
 	private DistinguishedName dn;
 
 	private Map<String, List<Object>> attrsAsMap;
@@ -53,11 +56,6 @@ public class LdapEntry {
 	public DistinguishedName getDn() {
 		return dn;
 	}
-
-	public void setDn(DistinguishedName dn) {
-		this.dn = dn;
-	}
-
 
 	@Override
 	public String toString() {
@@ -81,13 +79,19 @@ public class LdapEntry {
 
 	public String getAttributeValueAsString(String ldapName) {
 		List<Object> values = getAttributeValues(ldapName);
-		return values.size() > 0 && values.get(0) != null ?  values.get(0).toString() : "";
+		return values.size() > 0 && values.get(0) != null ?  values.get(0).toString() : null;
 	}
 	
 	
 	private Map<String, List<Object>> convertAttributesToMap(Attributes attributes){
 
 		Map<String, List<Object>> attrsAsMap = new HashMap<String, List<Object>>();
+		
+		
+		if (attributes == null){
+			return attrsAsMap;
+		}
+		
 		NamingEnumeration<? extends Attribute> attrs = attributes.getAll();
 		
 		while (attrs.hasMoreElements()) {
@@ -103,12 +107,19 @@ public class LdapEntry {
 					values.add(attrValue);
 				}
 			} catch (NamingException e) {
-				Log.warn("Problem when reading attribute value", e);
+				log.warn("Problem when reading attribute value", e);
 			}
 						
 			attrsAsMap.put(attr.getID(), values);
 		}
 		return attrsAsMap;
+	}
+
+	public void putAttribute(String name, Object value) {
+		if (value instanceof List)
+			attrsAsMap.put(name, (List) value);
+		else
+			attrsAsMap.put(name, Arrays.asList(value));
 	}
 
 }

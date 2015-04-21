@@ -3,7 +3,6 @@ package org.ldap.ws.resources.impl;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.naming.InvalidNameException;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -19,13 +18,12 @@ import org.ldap.Rest2LdapConfig.ResourceConfiguration;
 import org.ldap.beans.LdapEntry;
 import org.ldap.core.ILdapDAO;
 import org.ldap.criteria.LdapCriteria;
+import org.ldap.utils.LdapEntryRepresentationRulesChecker;
 import org.ldap.utils.PaginateList;
 import org.ldap.ws.repr.LdapEntryRepresentation;
 import org.ldap.ws.repr.SearchResultRepresentation;
 import org.ldap.ws.resources.ILdapResource;
 import org.springframework.ldap.core.DistinguishedName;
-
-import com.jayway.restassured.internal.http.Status;
 
 /**
  * 
@@ -57,7 +55,7 @@ public class LdapResource implements ILdapResource {
 	private UriInfo uriInfo;
 
 	@Override
-	public Response getLdapResource(String path, String view) throws InvalidNameException {
+	public Response getLdapResource(String path, String view){
 
 
 		String[] segments = StringUtils.splitPreserveAllTokens(path, "/");
@@ -103,25 +101,56 @@ public class LdapResource implements ILdapResource {
 		return response;
 	}
 	
-	private Response getResource(ResourceConfiguration resource,
-			RepresentationConfiguration repr, String path) throws InvalidNameException {
+	
+	@Override
+	public Response updateLdapResource(String path, String view, LdapEntryRepresentation submitRepresentation){
+
+		
+		String[] segments = StringUtils.splitPreserveAllTokens(path, "/");
+		String resourceName = segments[0];
+		String realpath = StringUtils.removeStart(path, resourceName);
+		realpath = StringUtils.removeStart(realpath, "/");
+		ResourceConfiguration resource = config.getResourceConfig(resourceName);
+
+		submitRepresentation.setId(path);
+		
+		log.debug("PUT /"+path+" mapped as ressource '"+resourceName+"' on view " + view + " and content " + submitRepresentation);
+		
+		if (resource == null){
+			return Response.noContent().build();
+		}
+		
+		RepresentationConfiguration repr = resource.getRepresentation(view);
+		
+		LdapEntryRepresentation cleanForUpdate = LdapEntryRepresentationRulesChecker.cleanForUpdate(submitRepresentation, config, resource, repr, null);
+				
+		LdapEntry updatedEntry = ldapDAO.updateLdapEntry(cleanForUpdate.parse());
+		
+		cleanForUpdate.format(updatedEntry);
+		
+		return Response.ok(cleanForUpdate).build();
+	}
+
+
+
+	private Response getResource(ResourceConfiguration resource, RepresentationConfiguration repr, String path){
 
 		
 		DistinguishedName dn = resource.getDnFromUri(path);
 		LdapEntry e = ldapDAO.getLdapEntry(dn);
 		LdapEntryRepresentation eRepr = new LdapEntryRepresentation(config, resource, repr);
-		eRepr.buildRepresentation(e);
+		eRepr.format(e);
 		
 		Response response = Response.ok(eRepr).build();		
 	
 		return response;
 	}
 	
-	private Response findAllRessource(final ResourceConfiguration resource, final RepresentationConfiguration repr) throws InvalidNameException{
+	private Response findAllRessource(final ResourceConfiguration resource, final RepresentationConfiguration repr){
 		return findAllRessource(resource, repr, "");
 	}
 	
-	private Response findAllRessource(final ResourceConfiguration resource, final RepresentationConfiguration repr, String uri) throws InvalidNameException{
+	private Response findAllRessource(final ResourceConfiguration resource, final RepresentationConfiguration repr, String uri){
 
 		DistinguishedName dn = new DistinguishedName(resource.getDnFromUri(uri));
 		LdapCriteria criteria = resource.getCriteria(uriInfo.getQueryParameters(true));
