@@ -3,6 +3,10 @@ package org.ldap.core.dao;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttribute;
+import javax.naming.directory.BasicAttributes;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.ldap.beans.LdapEntry;
@@ -48,7 +52,37 @@ public class LdapDAOImpl implements ILdapDAO {
 		return getLdapEntry(ldapEntry.getDn());
 	}
 
+	
 
+
+	@Override
+	public LdapEntry createLdapEntry(LdapEntry ldapEntry) {
+		Attributes attrs = new BasicAttributes();
+		
+		for (Entry<String, List<Object>> attributesValue : ldapEntry.getAttributesAsMap().entrySet()) {
+			String key = attributesValue.getKey();
+			List<Object> values = attributesValue.getValue();
+			
+			if (values == null){
+				attrs.put(key, null);
+			}
+			else if (values.size() == 1){
+				attrs.put(key, values.get(0));
+			}
+			else{
+				BasicAttribute ocattr = new BasicAttribute(key);
+				attrs.put(ocattr);
+				for (Object value : values) {
+					ocattr.add(value);
+				}
+			}
+		}
+		log.debug("Creating LdapEntry " + ldapEntry.getDn() + " with attributes " + attrs);
+		
+		ldapTemplate.bind(ldapEntry.getDn(), null, attrs);
+		
+		return getLdapEntry(ldapEntry.getDn());
+	}
 
 	@Override
 	public List<LdapEntry> findAllLdapEntry(DistinguishedName dn) {

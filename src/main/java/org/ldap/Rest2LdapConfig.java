@@ -244,6 +244,15 @@ public class Rest2LdapConfig {
 		public String getName() {
 			return name;
 		}
+
+		public List<AttributeMappingConfiguration> getAttributeResourceReference() {
+			List<AttributeMappingConfiguration> result = new ArrayList<Rest2LdapConfig.AttributeMappingConfiguration>();
+			for (AttributeMappingConfiguration attr : attributes) {
+				if (attr.isResource())
+					result.add(attr);
+			}
+			return result;
+		}
 		
 		
 	}
@@ -266,6 +275,11 @@ public class Rest2LdapConfig {
 		@XmlAttribute(name="resource")
 		private String resourceName;
 
+		@XmlAttribute(name="view")
+		private String view;
+
+		@XmlAttribute(name="defaultValue")
+		private String defaultValue;
 		
 		//Rules
 		
@@ -291,6 +305,10 @@ public class Rest2LdapConfig {
 		private String format;
 		
 		private List<AttributeRules> rules;
+
+
+		private ResourceConfiguration resourceReference;
+		private RepresentationConfiguration representationReference;
 		
 		protected AttributeMappingConfiguration() {
 			
@@ -316,35 +334,22 @@ public class Rest2LdapConfig {
 		public String getName() {
 			return name;
 		}
-		public AttributeMappingType getType() {
-			return type;
-		}
-		public String getResourceName() {
-			return resourceName;
-		}
-		public boolean isMultiple() {
-			return multiple;
+		public String getDefaultValue() {
+			return defaultValue;
 		}
 		public String getContentType() {
 			return contentType;
 		}
-		public boolean isReadonly() {
-			return readonly;
-		}
-		public boolean isRequired() {
-			return required;
-		}
-		public String getValues() {
-			return values;
-		}
-		public Integer getMaxlength() {
-			return maxlength;
+		public boolean isMultiple() {
+			return multiple;
 		}
 		
-		public String getFormat() {
-			return format;
+		public ResourceConfiguration getResourceReference() {
+			return resourceReference;
 		}
-		
+		public RepresentationConfiguration getRepresentationReference() {
+			return representationReference;
+		}
 		public void buildAttributeRules() {
 			rules = new ArrayList<AttributeRules>();
 			if (Objects.nonNull(format))rules.add(new FormatRules(format));
@@ -359,6 +364,24 @@ public class Rest2LdapConfig {
 			return rules;
 		}
 		
+		public boolean isResource(){
+			return this.type == AttributeMappingType.RESOURCE;
+		}
+		
+		public boolean isFile(){
+			return this.type == AttributeMappingType.FILE;
+		}
+		public boolean hasRuleOf(Class<? extends AttributeRules> clazz) {
+			return getRuleOf(clazz) != null;
+		}
+		public AttributeRules getRuleOf(Class<? extends AttributeRules> clazz) {
+			for (AttributeRules rule : rules) {
+				if (clazz.isInstance(rule)){
+					return rule;
+				}
+			}
+			return null;
+		}
 	}
 	
 
@@ -440,20 +463,44 @@ public class Rest2LdapConfig {
 			resource.setParentLdapBase(this.ldapBase);
 			resource.config = this;
 			for (RepresentationConfiguration representation : resource.representations) {
-				if (StringUtils.isNotBlank(representation.extendsName)){
-					RepresentationConfiguration extendsRepresentation = resource.getRepresentation(representation.extendsName);
-					representation.setExtendsAttributes(extendsRepresentation.attributes);
-				}
+				buildAttributesExtends(resource, representation);
+				buildAttributesRules(resource, representation);
+				buildAttributesReference(resource, representation);
 			}
+		}
+	}
+
+
+	private void buildAttributesExtends(ResourceConfiguration resource, RepresentationConfiguration representation) {
+		if (StringUtils.isNotBlank(representation.extendsName)){
+			RepresentationConfiguration extendsRepresentation = resource.getRepresentation(representation.extendsName);
+			representation.setExtendsAttributes(extendsRepresentation.attributes);
 		}
 	}	
 	
-	private void buildAttributeRules(){
-		for (ResourceConfiguration resource : this.resources) {
-			for (RepresentationConfiguration representation : resource.representations) {
-				for (AttributeMappingConfiguration attributeMapping : representation.attributes) {
-					attributeMapping.buildAttributeRules();
+	private void buildAttributesRules(ResourceConfiguration resource, RepresentationConfiguration representation) {
+		for (AttributeMappingConfiguration attributeMapping : representation.attributes) {
+			attributeMapping.buildAttributeRules();
+		}
+	}
+	
+	private void buildAttributesReference(ResourceConfiguration resource, RepresentationConfiguration representation) {
+		for (AttributeMappingConfiguration attributeMapping : representation.attributes) {
+			if (attributeMapping.type == AttributeMappingType.RESOURCE){
+				ResourceConfiguration resourceReference = resource.config.getResourceConfig(attributeMapping.resourceName);
+				if (resourceReference == null){
+					log.warn("Unable to find the resource referenced by " + attributeMapping);
+					break;
 				}
+				
+				RepresentationConfiguration representationReference = attributeMapping.view == null ? null : resourceReference.getRepresentation(attributeMapping.view);
+				if (attributeMapping.view != null && representationReference == null){
+					log.warn("Unable to find the view referenced by " + attributeMapping);
+					break;
+				}
+				
+				attributeMapping.resourceReference = resourceReference;
+				attributeMapping.representationReference = representationReference;
 			}
 		}
 	}
@@ -474,7 +521,6 @@ public class Rest2LdapConfig {
 		}
 		
 		c.resolveExtendsAndDependencies();
-		c.buildAttributeRules();
 
 		log.info("Config loaded: "+c.toString());
 		

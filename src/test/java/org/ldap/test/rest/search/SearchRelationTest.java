@@ -15,7 +15,7 @@ public class SearchRelationTest extends BaseRESTUnit {
 
 		expect().log().all()
 			.statusCode(200)
-			.body("attributes.fonction", contains("test"))
+			.body("attributes.fonction.attributes.libelle", containsInAnyOrder("Secrétaire", "Responsable de pôle"))
 			.given()
 			.when().get("/people/j.doe");
 	}

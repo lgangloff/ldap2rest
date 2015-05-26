@@ -1,18 +1,24 @@
 package org.ldap.ws.resources.impl;
 
+import java.net.URI;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.ldap.Rest2LdapConfig;
+import org.ldap.Rest2LdapConfig.AttributeMappingConfiguration;
 import org.ldap.Rest2LdapConfig.RepresentationConfiguration;
 import org.ldap.Rest2LdapConfig.ResourceConfiguration;
 import org.ldap.beans.LdapEntry;
@@ -111,26 +117,73 @@ public class LdapResource implements ILdapResource {
 		String realpath = StringUtils.removeStart(path, resourceName);
 		realpath = StringUtils.removeStart(realpath, "/");
 		ResourceConfiguration resource = config.getResourceConfig(resourceName);
-
+		
+		if (resource == null || StringUtils.isEmpty(realpath) || submitRepresentation == null){
+			throw new BadRequestException();
+		}
+		
 		submitRepresentation.setId(path);
 		
 		log.debug("PUT /"+path+" mapped as ressource '"+resourceName+"' on view " + view + " and content " + submitRepresentation);
-		
-		if (resource == null){
-			return Response.noContent().build();
-		}
-		
+				
 		RepresentationConfiguration repr = resource.getRepresentation(view);
+		
+		if (repr == null)
+			throw new BadRequestException();
+		
+		if (!repr.isUpdatable())
+			throw new ForbiddenException();
+		
 		
 		LdapEntryRepresentation cleanForUpdate = LdapEntryRepresentationRulesChecker.cleanForUpdate(submitRepresentation, config, resource, repr, null);
 				
 		LdapEntry updatedEntry = ldapDAO.updateLdapEntry(cleanForUpdate.parse());
+		loadReference(repr, updatedEntry);
 		
 		cleanForUpdate.format(updatedEntry);
 		
 		return Response.ok(cleanForUpdate).build();
 	}
 
+	@Override
+	public Response createLdapResource(String path, String view, LdapEntryRepresentation submitRepresentation) {
+
+		String[] segments = StringUtils.splitPreserveAllTokens(path, "/");
+		String resourceName = segments[0];
+		String realpath = StringUtils.removeStart(path, resourceName);
+		realpath = StringUtils.removeStart(realpath, "/");
+		ResourceConfiguration resource = config.getResourceConfig(resourceName);
+
+		if (resource == null){
+			return Response.status(Status.BAD_REQUEST).entity("Unable to identify the ressource '" + resourceName+"'").build();
+		}
+		if (StringUtils.isNotEmpty(realpath)){
+			return Response.status(Status.BAD_REQUEST).entity("In order to create a resource of type '"+resourceName+"', POST a request on '/"+resourceName +"' not on '/"+path+"'").build();
+		}
+		if (StringUtils.isBlank(submitRepresentation.getId())){
+			return Response.status(Status.BAD_REQUEST).entity("An ID must be provided").build();
+		}
+		
+		log.debug("POST /"+path+" mapped as ressource '"+resourceName+"' on view " + view + " and content " + submitRepresentation);
+				
+		RepresentationConfiguration repr = resource.getRepresentation(view);
+		
+		LdapEntryRepresentation cleanForCreate = LdapEntryRepresentationRulesChecker.cleanForCreate(submitRepresentation, config, resource, repr, null);
+
+		if (cleanForCreate.getWarnings() != null){
+			return Response.status(Status.BAD_REQUEST).entity(cleanForCreate).build();
+		}
+
+		log.debug("Content after cleaning up " + cleanForCreate);
+		
+		LdapEntry createdEntry = ldapDAO.createLdapEntry(cleanForCreate.parse());
+		loadReference(repr, createdEntry);
+		
+		cleanForCreate.format(createdEntry);
+		
+		URI createdUri = UriBuilder.fromPath(resource.getPathConverter().getUriFromDn(createdEntry.getDn())).build();
+		return Response.created(createdUri).build();
+	}
 
 
 	private Response getResource(ResourceConfiguration resource, RepresentationConfiguration repr, String path){
@@ -138,6 +191,9 @@ public class LdapResource implements ILdapResource {
 		
 		DistinguishedName dn = resource.getDnFromUri(path);
 		LdapEntry e = ldapDAO.getLdapEntry(dn);
+		
+		loadReference(repr, e);
+		
 		LdapEntryRepresentation eRepr = new LdapEntryRepresentation(config, resource, repr);
 		eRepr.format(e);
 		
@@ -162,6 +218,8 @@ public class LdapResource implements ILdapResource {
 		entriesPaginate.setResults(entries);
 		entriesPaginate.paginate();
 		
+		loadReference(repr, entriesPaginate);
+		
 		SearchResultRepresentation search = new SearchResultRepresentation(entriesPaginate);
 		search.setConfig(config);
 		search.setResource(resource);
@@ -169,5 +227,32 @@ public class LdapResource implements ILdapResource {
 		search.buildLink(uriInfo);
 		
 		return Response.ok(search).build();
+	}
+	
+
+	private void loadReference(final RepresentationConfiguration repr, Iterable<LdapEntry> entries){
+		for (LdapEntry entry : entries) {
+			loadReference(repr, entry);
+		}
+	}
+	
+	private void loadReference(final RepresentationConfiguration repr, LdapEntry entry){
+		
+		List<AttributeMappingConfiguration> attrs = repr.getAttributeResourceReference();
+		
+		//TODO: Optimiser le chargement des lazy !!!
+		for (AttributeMappingConfiguration attr : attrs) {
+			List<LdapEntry> lazyReferenceAttributeValues = entry.getAttributeValuesAsLdapEntry(attr.getLdapName());
+			for (LdapEntry lazyLdapEntry : lazyReferenceAttributeValues) {
+				LdapEntry loadedLdapEntry = ldapDAO.getLdapEntry(lazyLdapEntry.getDn());
+				
+				// Permettra de charger les references de reference
+				// TODO: Attention à la profondeur et gerer les boucle infinie
+				//loadReference(attr.getRepresentationReference(), loadedLdapEntry); 
+				
+				lazyLdapEntry.mergeAttributes(loadedLdapEntry);
+			}
+		}
+		
 	}
 }

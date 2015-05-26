@@ -3,6 +3,7 @@ package org.ldap.ws.resources;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -28,6 +29,14 @@ public interface ILdapResource {
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateLdapResource(
+			@PathParam("path") String path, 
+			@QueryParam("view") @DefaultValue("default") String view,
+			LdapEntryRepresentation representation);
+	
+
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response createLdapResource(
 			@PathParam("path") String path, 
 			@QueryParam("view") @DefaultValue("default") String view,
 			LdapEntryRepresentation representation);

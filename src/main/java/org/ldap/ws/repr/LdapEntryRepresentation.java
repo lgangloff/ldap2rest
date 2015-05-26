@@ -14,7 +14,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.ldap.Rest2LdapConfig;
 import org.ldap.Rest2LdapConfig.AttributeMappingConfiguration;
-import org.ldap.Rest2LdapConfig.AttributeMappingType;
 import org.ldap.Rest2LdapConfig.RepresentationConfiguration;
 import org.ldap.Rest2LdapConfig.ResourceConfiguration;
 import org.ldap.beans.LdapEntry;
@@ -59,10 +58,9 @@ public class LdapEntryRepresentation {
 			
 			if (attributes.containsKey(attr.getName())){
 
-				if (attr.getType() == AttributeMappingType.RESOURCE){
+				if (attr.isResource()){
 					
-					ResourceConfiguration res = config.getResourceConfig(attr.getResourceName());
-					PathConverter pathConverter = res.getPathConverter();
+					PathConverter pathConverter = attr.getResourceReference().getPathConverter();
 					
 					if (attr.isMultiple()){
 						List<Object> attributeValues = (List<Object>) attributes.get(attr.getLdapName());
@@ -72,15 +70,15 @@ public class LdapEntryRepresentation {
 							attributeDnValue.add(pathConverter.getDnFromUri(uri.toString()).toString());
 						}
 						
-						attributes.put(attr.getLdapName(), attributeDnValue);
+						ldapEntry.putAttribute(attr.getLdapName(), attributeDnValue);
 					}
 					else{
 						String uri = (String) attributes.get(attr.getLdapName());
-						attributes.put(attr.getLdapName(), pathConverter.getDnFromUri(uri).toString());
+						ldapEntry.putAttribute(attr.getLdapName(), pathConverter.getDnFromUri(uri).toString());
 					}
 					
 				}
-				else if (attr.getType() == AttributeMappingType.FILE){
+				else if (attr.isFile()){
 					//TODO ?
 				}
 				else{
@@ -104,6 +102,10 @@ public class LdapEntryRepresentation {
 			this.links.add(new LinkRepresentation("this/"+r.getName(), this.id + "?view=" + r.getName(), MediaType.APPLICATION_JSON));
 		}
 		
+		if (representation == null){
+			return;
+		}
+		
 		if (representation.isIncludeAllAttributes()){
 
 			Map<String, List<Object>> attributesAsMap = entry.getAttributesAsMap();
@@ -118,36 +120,43 @@ public class LdapEntryRepresentation {
 			this.attributes = new HashMap<String, Object>(representation.getAttributes().size());
 			for (AttributeMappingConfiguration attr : representation.getAttributes()) {
 					
-				if (attr.getType() == AttributeMappingType.RESOURCE){
+				if (attr.isResource()){
+										
+					List<LdapEntry> attributeValues = entry.getAttributeValuesAsLdapEntry(attr.getLdapName());
+					List<LdapEntryRepresentation> attributeValue = new ArrayList<LdapEntryRepresentation>(attributeValues.size());
 					
-					ResourceConfiguration res = config.getResourceConfig(attr.getResourceName());
-					PathConverter pathConverter = res.getPathConverter();
-					
-					if (attr.isMultiple()){
-						List<Object> attributeValues = entry.getAttributeValues(attr.getLdapName());
-						List<String> attributeUriValue = new ArrayList<String>(attributeValues.size());
+					for (int i = 0; i < attributeValues.size(); i++) {
+						LdapEntry referenceEntry = attributeValues.get(i);
+
+						LdapEntryRepresentation referenceRepresentation = 
+								new LdapEntryRepresentation(config, attr.getResourceReference(), attr.getRepresentationReference());
+						referenceRepresentation.format(referenceEntry);
 						
-						for (Object dn : attributeValues) {
-							attributeUriValue.add(pathConverter.getUriFromDn(dn.toString()));
-						}
+						attributeValue.add(referenceRepresentation);
 						
-						attributes.put(attr.getName(), attributeUriValue);
+						
+						
+						if (!attr.isMultiple())
+							break;
 					}
+					
+					if (attr.isMultiple())
+						attributes.put(attr.getName(), attributeValue);
 					else{
-						String dn = entry.getAttributeValueAsString(attr.getLdapName());
-						attributes.put(attr.getName(), pathConverter.getUriFromDn(dn) );
+						attributes.put(attr.getName(), attributeValue.isEmpty() ? null : attributeValue.get(0) );
 					}
 					
 				}
-				else if (attr.getType() == AttributeMappingType.FILE){
+				else if (attr.isFile()){
 					this.links.add(new LinkRepresentation("this/" + attr.getName(), this.id + "/" + attr.getName(), attr.getContentType()));
 				}
 				else{
-					if (attr.isMultiple()){
-						attributes.put(attr.getName(), entry.getAttributeValues(attr.getLdapName()));
-					}
+					List<Object> attributeValues = entry.getAttributeValuesAsObject(attr.getLdapName());
+
+					if (attr.isMultiple())
+						attributes.put(attr.getName(), attributeValues);
 					else{
-						attributes.put(attr.getName(), entry.getAttributeValueAsString(attr.getLdapName()));
+						attributes.put(attr.getName(), attributeValues.isEmpty() ? null : attributeValues.get(0) );
 					}
 				}
 			}		
@@ -195,7 +204,7 @@ public class LdapEntryRepresentation {
 
 	@XmlElement
 	public List<String> getWarnings() {
-		return warnings;
+		return warnings == null || warnings.isEmpty() ? null : warnings;
 	}
 
 	public void addWarningMessage(String message) {

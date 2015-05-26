@@ -1,12 +1,14 @@
 <rest ldapbase="dc=example,dc=com">
 	<resource name="people" ldapbase="ou=internal,ou=people" ldapkey="cn">
 		<representation name="default" updatable="true">
+			<attribute ldapname="objectclass"				name="objectclass" 	readonly="true" required="true" multiple="true" defaultValue="top,person,organizationalPerson,inetOrgPerson"/>
+			
 			<attribute ldapname="employeeNumber"			name="num-employe" 	readonly="true"/>
 			<attribute ldapname="title"						name="civilite" 	type="enum"		required="true" values="M.,Mme,Mlle"/>
 			<attribute ldapname="sn"						name="nom"			required="true" maxlength="16"/> 
 			<attribute ldapname="givenName"					name="prenom"/> 
 			<attribute ldapname="telephoneNumber"			name="tel-externe"  type="integer"/>
-			<attribute ldapname="seeAlso"					name="fonction"  	type="resource" resource="fonction" multiple="true"/>
+			<attribute ldapname="seeAlso"					name="fonction"  	type="resource" resource="fonction" view="default" multiple="true"/>
 		</representation>
 		<representation name="full" extends="default" updatable="false">		
 			<attribute ldapname="mail"						name="mail"/>
@@ -32,9 +34,11 @@
 -	<resource name="fonction" ldapbase="ou=function" ldapkey="cn">
 -		<representation name="default">
 -			<attribute ldapname="businessCategory"			name="libelle" 	type="string"/>
--			<attribute ldapname="member"					name="membres" 	type="resource" resource="people" multiple="true"/>
 -		</representation>
 -		
+-		<representation name="full" extends="default">
+-			<attribute ldapname="member"					name="membres" 	type="resource" resource="people" multiple="true"/>
+-		</representation>
 -		
 -		<query representation="default">
 -			<param name="libelle">

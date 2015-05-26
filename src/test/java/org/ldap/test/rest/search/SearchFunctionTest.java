@@ -38,9 +38,20 @@ public class SearchFunctionTest extends BaseRESTUnit {
 		expect().log().ifError()
 			.statusCode(200)
 			.body("attributes.libelle", equalTo("Secrétaire"))
-			.body("attributes.membres", containsInAnyOrder("people/v.rossi", "people/j.doe"))
 			.given()
 			.when().get("/fonction/secretaire");
+	}
+	
+
+	@Test
+	public void testGetSecretaireFull(){
+
+		expect().log().all()
+			.statusCode(200)
+			.body("attributes.libelle", equalTo("Secrétaire"))
+			.body("attributes.membres.id", containsInAnyOrder("people/v.rossi", "people/j.doe"))
+			.given()
+			.when().get("/fonction/secretaire?view=full");
 	}
 
 }

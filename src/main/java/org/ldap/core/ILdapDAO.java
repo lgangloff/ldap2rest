@@ -1,7 +1,6 @@
 package org.ldap.core;
 
 import java.util.List;
-import java.util.Map;
 
 import org.ldap.beans.LdapEntry;
 import org.ldap.criteria.LdapCriteria;
@@ -15,4 +14,6 @@ public interface ILdapDAO {
 	public List<LdapEntry> findAllLdapEntry(DistinguishedName dn, LdapCriteria criteria);
 
 	public LdapEntry updateLdapEntry(LdapEntry ldapEntry);
+
+	public LdapEntry createLdapEntry(LdapEntry ldapEntry);
 }

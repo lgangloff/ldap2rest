@@ -39,7 +39,8 @@ public class LdapEntry {
 	
 	private DistinguishedName dn;
 
-	private Map<String, List<Object>> attrsAsMap;
+	private Map<String, List<Object>> attrsObjectAsMap;
+	private Map<String, List<LdapEntry>> attrsLdapEntryAsMap;
 	
 	public LdapEntry(){	}
 	
@@ -50,7 +51,8 @@ public class LdapEntry {
 	public LdapEntry(Name name, Attributes attributes) {
 		super();
 		this.dn = new DistinguishedName(name);
-		this.attrsAsMap = convertAttributesToMap(attributes);
+		this.attrsObjectAsMap = convertAttributesToMap(attributes);
+		this.attrsLdapEntryAsMap = new HashMap<String, List<LdapEntry>>();
 	}
 
 	public DistinguishedName getDn() {
@@ -59,7 +61,7 @@ public class LdapEntry {
 
 	@Override
 	public String toString() {
-		return "LdapEntry [dn=" + dn + ", attributes=" + attrsAsMap + "]";
+		return "LdapEntry [dn=" + dn + ", attributes=" + attrsObjectAsMap + "]";
 	}
 	
 	@XmlElement(name="id")
@@ -69,17 +71,31 @@ public class LdapEntry {
 	
 	@XmlElement(name="attributes")
 	public Map<String, List<Object>> getAttributesAsMap(){
-		return attrsAsMap;
-	}
-
-	public List<Object> getAttributeValues(String ldapName) {
-		return attrsAsMap.containsKey(ldapName) ? attrsAsMap.get(ldapName) : Collections.EMPTY_LIST;
+		return attrsObjectAsMap;
 	}
 	
+	public List<LdapEntry> getAttributeValuesAsLdapEntry(String ldapName) {
+		
+		if (attrsLdapEntryAsMap.containsKey(ldapName))
+			return attrsLdapEntryAsMap.get(ldapName);
+		
+		if (!attrsObjectAsMap.containsKey(ldapName)){
+			attrsLdapEntryAsMap.put(ldapName, Collections.<LdapEntry>emptyList());
+			return attrsLdapEntryAsMap.get(ldapName);
+		}
 
-	public String getAttributeValueAsString(String ldapName) {
-		List<Object> values = getAttributeValues(ldapName);
-		return values.size() > 0 && values.get(0) != null ?  values.get(0).toString() : null;
+		List<Object> originalList = attrsObjectAsMap.get(ldapName);
+		List<LdapEntry> results = new ArrayList<LdapEntry>(originalList.size());
+		for (Object dn : originalList) {
+			results.add(new LdapEntry(new DistinguishedName(dn.toString())));
+		}
+		attrsLdapEntryAsMap.put(ldapName, results);
+		return attrsLdapEntryAsMap.get(ldapName);
+	}
+
+
+	public List<Object> getAttributeValuesAsObject(String ldapName) {
+		return attrsObjectAsMap.getOrDefault(ldapName, Collections.emptyList());
 	}
 	
 	
@@ -116,10 +132,16 @@ public class LdapEntry {
 	}
 
 	public void putAttribute(String name, Object value) {
-		if (value instanceof List)
-			attrsAsMap.put(name, (List) value);
-		else
-			attrsAsMap.put(name, Arrays.asList(value));
+		if (value instanceof List) {
+			attrsObjectAsMap.put(name, (List<Object>) value);
+		} 
+		else {
+			attrsObjectAsMap.put(name, Arrays.asList(value));
+		}
+	}
+
+	public void mergeAttributes(LdapEntry entry) {
+		attrsObjectAsMap.putAll(entry.attrsObjectAsMap);
 	}
 
 }

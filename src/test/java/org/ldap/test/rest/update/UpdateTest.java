@@ -14,11 +14,37 @@ import org.ldap.test.rest.BaseRESTUnit;
 
 public class UpdateTest extends BaseRESTUnit {
 
+	@Test
+	public void testUpdateResourceNotPresent(){
+		String ressource = "/people";
+		
+		expect().log().ifError()
+		.statusCode(400)
+		.given()
+		.when()
+		.content("{\"attributes\" : { \"tel-mobile\" : null }}")
+		.contentType("application/json")
+		.put(ressource);
+	}
+
+	@Test
+	public void testUpdateResourceNotFound(){
+		String ressource = "/people/nexistepasdutout";
+		
+		expect().log().ifError()
+		.statusCode(404)
+		.given()
+		.when()
+		.content("{\"attributes\" : { \"tel-mobile\" : null }}")
+		.contentType("application/json")
+		.put(ressource);
+	}
+	
 	
 	@Test
 	public void testUpdateForbidden(){
 
-		String tel = "06.06.06.06.06";		
+		String tel = "06.06.06.06.06";
 		String ressource = "/people/v.rossi?view=full";
 		
 		expect().log().ifError()
@@ -50,7 +76,7 @@ public class UpdateTest extends BaseRESTUnit {
 		
 		expect().log().ifError()
 			.statusCode(200)
-			.body("warnings", Matchers.empty() )
+			.body("warnings", nullValue() )
 			.given()
 			.when()
 			.content("{\"attributes\" : { \"nom\" : \""+ expectedName +"\" }}")
@@ -116,7 +142,7 @@ public class UpdateTest extends BaseRESTUnit {
 		
 		expect().log().ifError()
 			.statusCode(200)
-			.body("warnings", Matchers.empty() )
+			.body("warnings", nullValue() )
 			.given()
 			.when()
 			.content("{\"attributes\" : { \"prenom\" : "+ expectedFirstName +" }}")
@@ -220,7 +246,7 @@ public class UpdateTest extends BaseRESTUnit {
 		
 		expect().log().ifError()
 			.statusCode(200)
-			.body("warnings",Matchers.empty())
+			.body("warnings", nullValue())
 			.given()
 			.when()
 			.content("{\"attributes\" : { \"civilite\" : \""+ expectedTitle +"\" }}")
